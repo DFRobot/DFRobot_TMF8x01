@@ -1,0 +1,65 @@
+#######################################
+# Syntax Map For DFRobot_TMF8x01
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+DFRobot_TMF8x01	KEYWORD1
+DFRobot_TMF8801	KEYWORD1
+DFRobot_TMF8701	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+getErrCode	KEYWORD2
+sleep KEYWORD2
+wakeup	KEYWORD2
+enterStandby	KEYWORD2
+getCalibrationData	KEYWORD2
+setCalibrationData	KEYWORD2
+stopMeasurement	KEYWORD2
+startMeasurement	KEYWORD2
+isDataReady	KEYWORD2
+getDistanceMm	KEYWORD2
+enableIntPin	KEYWORD2
+disableIntPin	KEYWORD2
+getUniqueID	KEYWORD2
+getSensorModel	KEYWORD2
+getSoftwareVersion	KEYWORD2
+powerOn	KEYWORD2
+powerDown	KEYWORD2
+modifyI2CAddress	KEYWORD2
+setGPIOControl	KEYWORD2
+getI2CAddress	KEYWORD2
+setRangingMode	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+SENSOR_MTF8x01_CALIBRATION_SIZE	LITERAL1
+ePROXIMITY	LITERAL1
+eDISTANCE	LITERAL1
+eCOMBINE	LITERAL1
+eModeNoCalib	LITERAL1
+eModeCalib	LITERAL1
+eModeCalibAndAlgoState	LITERAL1
+eCalibModeConfig_t	LITERAL1
+PIN_INPUT	LITERAL1
+PIN_INPUT_LOW	LITERAL1
+PIN_INPUT_HIGH	LITERAL1
+PIN_OUTPUT_VCSEL	LITERAL1
+PIN_OUTPUT_LOW	LITERAL1
+PIN_OUTPUT_HIGH	LITERAL1
+eGPIOControl_t	LITERAL1
+ERR_CODE	LITERAL1
+MODEL_TMF8801	LITERAL1
+MODEL_TMF8701	LITERAL1
