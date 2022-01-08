@@ -1,4 +1,4 @@
-# DFRobot_18B20_RS485
+# DFRobot_TMF8x01
 
 * [中文版](./README_CN.md)
 
