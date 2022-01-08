@@ -150,13 +150,6 @@ python3 demo_calibration.py
     @return set sucess return true, or return false.
   '''
   def set_calibration_data(self, l): 
-    
-  '''!
-    @brief  enable measurement config.
-    @param l The list of 14 bytes calibration data.
-    @return set sucess return true, or return false.
-  '''
-  def _set_caibration_mode(self, calib_m = eMODE_CALIB): 
 
   '''!
     @brief  disable measurement config.
