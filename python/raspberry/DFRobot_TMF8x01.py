@@ -1,24 +1,16 @@
 # -*- coding:utf-8 -*-
 
+'''!
+  @file DFRobot_TMF8x01.py
+  @brief 定义DFRobot_TMF8x01 类的基础结构，基础方法的实现。实现测距功能，支持TMF8801和TMF8701类型的TOF测距传感器。
+  @copyright   Copyright (c) 2010 DFRobot Co.Ltd (http://www.dfrobot.com)
+  @license     The MIT License (MIT)
+  @author      Arya(xue.peng@dfrobot.com)
+  @version     V1.0
+  @date        2021-03-16
+  @url https://github.com/DFRobot/DFRobot_TMF8x01
 '''
- MIT License
 
- Copyright (C) <2019> <@DFRobot Frank>
-
-　Permission is hereby granted, free of charge, to any person obtaining a copy of this
-　software and associated documentation files (the "Software"), to deal in the Software
-　without restriction, including without limitation the rights to use, copy, modify,
-　merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-　permit persons to whom the Software is furnished to do so.
-
-　The above copyright notice and this permission notice shall be included in all copies or
-　substantial portions of the Software.
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
- INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
- PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
- FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-'''
 import sys
 import time
 import smbus
@@ -41,21 +33,22 @@ class DFRobot_TMF8x01:
   _distance = []
   _timestamp = 0
   _tid = 0
-  _calibData = []
-  _algoStateData = []
-  _measureCmdSet = []
-  _measureCmdFlag = False
+  _calib_data = []
+  _algo_state_data = []
+  _measure_cmd_set = []
+  _measure_cmd_flag = False
   
-  resultDictKey = ['status', 'regContents','tid','resultNumber','resultInfo','disL','disH','syscolck0','syscolck1','syscolck2','syscolck3']
-  resultDict = {}
+  result_dictKey = ['status', 'regContents','tid','resultNumber','resultInfo','disL','disH','syscolck0','syscolck1','syscolck2','syscolck3']
+  result_dict = {}
   
   TMF8801_CALIB_DATA = [0x41,0x57,0x01,0xFD,0x04,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x04]
   TMF8801_ALGO_STATE = [0xB1, 0xA9, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
   TMF8x01_MEASUREMENT_DATA = []
   
-  ''' Enum calibration mode '''
-  eModeCalib = 1
-  eModeCalibAndAlgoState = 3
+  ## Enum calibration mode 
+  eMODE_NO_CALIB = 0
+  eMODE_CALIB  = 1
+  eMODE_CALIB_AND_ALGOSTATE = 3
   
   REG_MTF8x01_ENABLE = 0xE0
   REG_MTF8x01_APPID = 0x00
@@ -90,7 +83,7 @@ class DFRobot_TMF8x01:
   MODEL_TMF8801 = 0x4120
   MODEL_TMF8701 = 0x5e10
   
-  '''Enum CMDSET '''
+  ## Enum CMDSET 
   CMDSET_INDEX_CMD6 = 1
   CMDSET_BIT_PROXIMITY = 0
   CMDSET_BIT_DISTANCE = 1
@@ -101,52 +94,50 @@ class DFRobot_TMF8x01:
   CMDSET_BIT_CALIB = 0
   CMDSET_BIT_ALGO = 1
   
-  ''' Board status '''
+  ## Board status 
   STA_OK = 0x00
   STA_ERR = 0x01
   STA_ERR_DEVICE_NOT_DETECTED = 0x02
   STA_ERR_SOFT_VERSION = 0x03
   STA_ERR_PARAMETER = 0x04
 
-  ''' last operate status, users can use this variable to determine the result of a function call. '''
+  ## last operate status, users can use this variable to determine the result of a function call. 
   last_operate_status = STA_OK
   
   def __init__(self, enPin, intPin, bus_id):
-    self._en = enPin;
-    self._intPin = intPin;
+    self._en = enPin
+    self._intPin = intPin
     self._bus = smbus.SMBus(bus_id)
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
 
   def begin(self):
-    '''
-      @brief    Board begin
-      @param addr The I2C address of the TMF8x01,default is 0x41
-      @return   Board status Error code
+    '''!
+      @brief    initialization sensor's interface, addr, ram config to running APP0 application.
+      @return   initialization sucess return 0, fail return -1
     '''
     self._initialize = False
     if(self._en > -1):
       GPIO.setup(self._en, GPIO.OUT)
       GPIO.output(self._en, GPIO.LOW)
-      time.sleep(1);
+      time.sleep(1)
       GPIO.output(self._en, GPIO.HIGH)
-      time.sleep(1);
+      time.sleep(1)
     if(self._intPin > -1):
       GPIO.setup(self._intPin, GPIO.IN, GPIO.PUD_UP)
-      #print(self._intPin)
       
     self.sleep()
     self._write_bytes(self.REG_MTF8x01_ENABLE, [0x01])
-    if(self._waitForCpuReady() != True):
-      print("_waitForCpuReady is failed.")
+    if(self._wait_for_cpu_ready() != True):
+      print("_wait_for_cpu_ready is failed.")
       return -1
-    if(self._getAppId() == 0x80):
+    if(self._get_app_id() == 0x80):
       #print("bootloader")
-      if(self._downloadRamPatch() != True):
+      if(self._download_ram_patch() != True):
         print("download ram patch is failed.")
         return -1
       if (self._waitForApplication() != True):
-        self._loadApplication()
+        self._load_application()
         if(self._waitForApplication() != True):
           print("APP0 is not running.")
           return -1
@@ -154,51 +145,50 @@ class DFRobot_TMF8x01:
     return 0
 
   def sleep(self):
-    '''
+    '''!
       @brief  sleep sensor by software, the sensor enter sleep mode(bootloader). Need to call wakeup function to wakeup sensor to enter APP0
     '''
     rslt = self._read_bytes(self.REG_MTF8x01_ENABLE,1)
     rslt[0] = rslt[0] |  (1 << 7)
     self._write_bytes(self.REG_MTF8x01_ENABLE, rslt)
-    self._measureCmdFlag = False
+    self._measure_cmd_flag = False
     self._count = 0
   
   def wakeup(self):
-    '''
+    '''!
       @brief  wakeup device from sleep mode, it will running app0.
       @return enter app0 return true, or return false.
     '''
     self._write_bytes(self.REG_MTF8x01_ENABLE, [0x01])
-    if(self._waitForCpuReady() != True):
+    if(self._wait_for_cpu_ready() != True):
       return False
-    if(self._getAppId() == 0x80):
+    if(self._get_app_id() == 0x80):
       #print("bootloader")
-      if(self._downloadRamPatch() != True):
+      if(self._download_ram_patch() != True):
         return False
       if (self._waitForApplication() != True):
         return False
     #else:
       #print("app0")
-    if(self._measureCmdSet[self.CMDSET_INDEX_CMD6] & (1<< self.CMDSET_BIT_INT)):
-      self.modifyCmdSet(self.CMDSET_INDEX_CMD6, self.CMDSET_BIT_INT, True);
-    if(self._setCaibrationMode(self._getCalibrationMode()) == False):
+    if(self._measure_cmd_set[self.CMDSET_INDEX_CMD6] & (1<< self.CMDSET_BIT_INT)):
+      self.modifyCmdSet(self.CMDSET_INDEX_CMD6, self.CMDSET_BIT_INT, True)
+    if(self._set_caibration_mode(self._get_calibration_mode()) == False):
       return False
     return True
 
-  def getUniqueID(self):
+  def get_unique_id(self): 
+    '''!
+      @brief get a unique number of sensor .Each sensor has a unique identifier.
+      @return return 4bytes unique number:
+      @n  the byte0 of return: serial_number_0
+      @n  the byte1 of return: serial_number_1
+      @n  the byte2 of return: identification_number_1
+      @n  the byte2 of return: identification_number_0
     '''
-    @brief get a unique number of sensor .Each sensor has a unique identifier.
-    @return return 4bytes unique number:
-    @n  the byte0 of return: serial_number_0
-    @n  the byte1 of return: serial_number_1
-    @n  the byte2 of return: identification_number_1
-    @n  the byte2 of return: identification_number_0
-    '''
-    '''read serial number'''
     self._write_bytes(self.REG_MTF8x01_COMMAND, [0x47])
     rslt = [0]
-    waitForTimeOutMs = 0.1;
-    waitForTimeoutIncMs = 0.005;
+    waitForTimeOutMs = 0.1
+    waitForTimeoutIncMs = 0.005
     t = 0
     while t < waitForTimeOutMs:
       time.sleep(waitForTimeoutIncMs)
@@ -206,20 +196,20 @@ class DFRobot_TMF8x01:
       if rslt[0] == 0x47:
         rslt = self._read_bytes(self.REG_MTF8x01_VERSION_SERIALNUM, 4)
         r = rslt[3] << 24 | rslt[2] << 16 | rslt[1] << 8 | rslt[0]
-        self._stopCommand()
+        self._stop_command()
         return r
     return 0
 
-  def getSensorModel(self):
-    '''
-    @brief get sensor's model.
-    @return return a String:
-    @n  TMF8801: the sensor is TMF8801
-    @n  TMF8701: the sensor is TMF8701
-    @n  unknown : unknown device
+  def get_sensor_model(self): 
+    '''!
+      @brief get sensor's model.
+      @return return a String:
+      @n  TMF8801: the sensor is TMF8801
+      @n  TMF8701: the sensor is TMF8701
+      @n  unknown : unknown device
     '''
     str1 = "unknown"
-    rslt = self.getUniqueID()
+    rslt = self.get_unique_id()
     rslt = (rslt >> 16)&0xFFFF
     if(rslt == self.MODEL_TMF8801):
       str1 = "TMF8801"
@@ -227,11 +217,11 @@ class DFRobot_TMF8x01:
       str1 = "TMF8701"
     return str1
 
-  def getSoftwareVersion(self):
-    '''
-    @brief get software version of patch.
-    @return return string of device software version,format:
-    @n major.minor.patch numbers.chip id version
+  def get_software_version(self): 
+    '''!
+      @brief get software version of patch.
+      @return return string of device software version,format:
+      @n major.minor.patch numbers.chip id version
     '''
     str1 = ""
     rslt = self._read_bytes(self.REG_MTF8x01_VERSION_MAJOR, 1)
@@ -251,16 +241,16 @@ class DFRobot_TMF8x01:
     str1 =str1 + lin
     return str1
 
-  def getCalibrationData(self):
-    '''
+  def get_calibration_data(self): 
+    '''!
       @brief  Get 14 bytes of calibration data.
       @return return 14 bytes of calibration data.
     '''
-    #print("getCalibrationData %d"%self._initialize)
+    #print("get_calibration_data %d"%self._initialize)
     rslt = []
     if(self._initialize == False):
       #print(self._initialize)
-      return list();
+      return list()
     time.sleep(0.0001)
     self._write_bytes(self.REG_MTF8x01_COMMAND, [0x0a])
     time.sleep(0.0001)
@@ -268,15 +258,13 @@ class DFRobot_TMF8x01:
       time.sleep(0.0001)
       rslt = self._read_bytes(self.REG_MTF8x01_RESULT_NUMBER, 14)
       print(rslt)
-      self._stopCommand();
+      self._stop_command()
       return rslt
     else:
-      #self._stopCommand();
-      #print("++++++++++")
       return list()
 
-  def setCalibrationData(self, l):
-    '''
+  def set_calibration_data(self, l): 
+    '''!
       @brief  set 14 bytes of calibration data.
       @param l The list of 14 bytes calibration data.
       @return set sucess return true, or return false.
@@ -286,60 +274,55 @@ class DFRobot_TMF8x01:
     TMF8801_CALIB_DATA = l
     return True
 
-  def _setCaibrationMode(self, calibMode = eModeCalib):
-    '''
-      @brief  enable measurement config.
-      @param l The list of 14 bytes calibration data.
-      @return set sucess return true, or return false.
-    '''
+  def _set_caibration_mode(self, calib_m = eMODE_CALIB): 
     if self._initialize == False:
       print("self._initialize == False")
       return
-    if self._measureCmdFlag == True:
-      print("self._measureCmdFlag == True")
+    if self._measure_cmd_flag == True:
+      print("self._measure_cmd_flag == True")
       return
-    if calibMode == self.eModeCalib:
-      self._modifyCmdSet(self.CMDSET_INDEX_CMD7,self.CMDSET_BIT_CALIB, True);
-      self._modifyCmdSet(self.CMDSET_INDEX_CMD7,self.CMDSET_BIT_ALGO, False);
+    if calib_m == self.eMODE_CALIB:
+      self._modify_cmd_set(self.CMDSET_INDEX_CMD7,self.CMDSET_BIT_CALIB, True)
+      self._modify_cmd_set(self.CMDSET_INDEX_CMD7,self.CMDSET_BIT_ALGO, False)
       self._write_bytes(self.REG_MTF8x01_COMMAND, [0x0B])
-      self._write_bytes(self.REG_MTF8x01_RESULT_NUMBER, self._calibData)
-    elif calibMode == self.eModeCalibAndAlgoState:
-      self._modifyCmdSet(self.CMDSET_INDEX_CMD7,self.CMDSET_BIT_CALIB, True);
-      self._modifyCmdSet(self.CMDSET_INDEX_CMD7,self.CMDSET_BIT_ALGO, True);
+      self._write_bytes(self.REG_MTF8x01_RESULT_NUMBER, self._calib_data)
+    elif calib_m == self.eMODE_CALIB_AND_ALGOSTATE:
+      self._modify_cmd_set(self.CMDSET_INDEX_CMD7,self.CMDSET_BIT_CALIB, True)
+      self._modify_cmd_set(self.CMDSET_INDEX_CMD7,self.CMDSET_BIT_ALGO, True)
       self._write_bytes(self.REG_MTF8x01_COMMAND, [0x0B])
-      self._write_bytes(self.REG_MTF8x01_RESULT_NUMBER, self._calibData)
-      self._write_bytes(self.REG_MTF8x01_STATEDATAWR, self._algoStateData)
+      self._write_bytes(self.REG_MTF8x01_RESULT_NUMBER, self._calib_data)
+      self._write_bytes(self.REG_MTF8x01_STATEDATAWR, self._algo_state_data)
     else:
-      self._modifyCmdSet(self.CMDSET_INDEX_CMD7,self.CMDSET_BIT_CALIB, False);
-      self._modifyCmdSet(self.CMDSET_INDEX_CMD7,self.CMDSET_BIT_ALGO, False);
-    self._write_bytes(self.REG_MTF8x01_CMD_DATA7, self._measureCmdSet);
+      self._modify_cmd_set(self.CMDSET_INDEX_CMD7,self.CMDSET_BIT_CALIB, False)
+      self._modify_cmd_set(self.CMDSET_INDEX_CMD7,self.CMDSET_BIT_ALGO, False)
+    self._write_bytes(self.REG_MTF8x01_CMD_DATA7, self._measure_cmd_set)
     
     time.sleep(0.5)
-    #print("startMeasurement end")
+    #print("start_measurement end")
     if(self._checkStatusRegister(0x55) != True):
       return False
     while self._count < 4:
-      if(self.isDataReady()):
-        self.getDistance_mm()
+      if(self.is_data_ready()): 
+        self.get_distance_mm()
       time.sleep(0.002)
-    self._measureCmdFlag = True
+    self._measure_cmd_flag = True
     return True
     
 
-  def stopMeasurement(self):
-    '''
+  def stop_measurement(self):
+    '''!
       @brief  disable measurement config.
     '''
-    self._measureCmdFlag = False
+    self._measure_cmd_flag = False
     self._write_bytes(self.REG_MTF8x01_COMMAND, [0xff])
     time.sleep(0.05)#s 50ms
-    self._measureCmdFlag = False
+    self._measure_cmd_flag = False
     self._count = 0
     self._timestamp = 1
     self._tid = 0
 
-  def isDataReady(self):
-    '''
+  def is_data_ready(self):
+    '''!
       @brief  Waiting for data ready.
       @return if data is valid, return true, or return false.
     '''
@@ -350,14 +333,11 @@ class DFRobot_TMF8x01:
     i = 0
     #time.sleep(0.01)
     t = time.time()
-    self.resultDict = dict(zip(self.resultDictKey, self._read_bytes(self.REG_MTF8x01_STATUS, 11)))
-    #print("c=%#x"%self.resultDict['regContents'])
-    #print("tid=%#x"%self._tid)
-    #print("tid1=%#x"%self.resultDict['tid'])
-    if self.resultDict['regContents'] == 0x55:
-      if self.resultDict['tid'] != self._tid:
-        self._tid = self.resultDict['tid']
-        j = self.resultDict["syscolck3"] << 24 | self.resultDict["syscolck2"] << 16 | self.resultDict["syscolck2"] << 8 | self.resultDict["syscolck0"]
+    self.result_dict = dict(zip(self.result_dictKey, self._read_bytes(self.REG_MTF8x01_STATUS, 11)))
+    if self.result_dict['regContents'] == 0x55:
+      if self.result_dict['tid'] != self._tid:
+        self._tid = self.result_dict['tid']
+        j = self.result_dict["syscolck3"] << 24 | self.result_dict["syscolck2"] << 16 | self.result_dict["syscolck2"] << 8 | self.result_dict["syscolck0"]
         if self._count < 4:
           self._host[self._count] = t*10000
           self._module[self._count] = (j*0.2)/100
@@ -378,7 +358,7 @@ class DFRobot_TMF8x01:
           return True
         else:
           self._count = 0
-    if self._measureCmdSet[self.CMDSET_INDEX_CMD6] & (1<<self.CMDSET_BIT_INT):
+    if self._measure_cmd_set[self.CMDSET_INDEX_CMD6] & (1<<self.CMDSET_BIT_INT):
       #print("+++++++++++++++++")
       rslt = self._read_bytes(self.REG_MTF8x01_INT_STATUS,1)
       if(rslt[0] & 0x01) == 1:
@@ -387,37 +367,37 @@ class DFRobot_TMF8x01:
       
     return False
 
-  def getDistance_mm(self):
-    '''
-      @brief  get distance, unit mm. Before using this function, you need to call isDataReady.
+  def get_distance_mm(self):
+    '''!
+      @brief  get distance, unit mm. Before using this function, you need to call is_data_ready.
       @return return distance value, unit mm.
     '''
-    rslt = self.resultDict["disH"] << 8 | self.resultDict["disL"]
+    rslt = self.result_dict["disH"] << 8 | self.result_dict["disL"]
     dis = rslt * self._timestamp
-    if self._measureCmdSet[self.CMDSET_INDEX_CMD6] & (1<<self.CMDSET_BIT_INT):
+    if self._measure_cmd_set[self.CMDSET_INDEX_CMD6] & (1<<self.CMDSET_BIT_INT):
       #print("+++++++++++++++++")
       rslt = self._read_bytes(self.REG_MTF8x01_INT_STATUS,1)
       rslt[0] |= 0x01
       self._write_bytes(self.REG_MTF8x01_INT_STATUS,rslt)
     return int(dis)
 
-  def enableIntPin(self):
-    '''
+  def enable_int_pin(self):
+    '''!
       @brief  enable INT pin. If you call this function,which will report a interrupt.
       @n signal to host by INT pin when measure data is ready.
     '''
     self._write_bytes(self.REG_MTF8x01_INT_ENAB,[0x01])
-    self._modifyCmdSet(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_INT, True)
+    self._modify_cmd_set(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_INT, True)
 
-  def disableIntPin(self):
-    '''
+  def disable_int_pin(self):
+    '''!
       @brief disable INT pin.
     '''
     self._write_bytes(self.REG_MTF8x01_INT_ENAB,[0])
-    self._modifyCmdSet(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_INT, False)
+    self._modify_cmd_set(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_INT, False)
 
-  def powerOn(self):
-    '''
+  def power_on(self):
+    '''!
       @brief power on sensor when power down sensor by EN pin.
       @return sucess return True, or return False
     '''
@@ -426,21 +406,21 @@ class DFRobot_TMF8x01:
     if (self._en < 0):
       return False
 
-    time.sleep(1);
+    time.sleep(1)
     GPIO.output(self._en, GPIO.HIGH)
-    time.sleep(1);
-    
+    time.sleep(1)
+  
     self._write_bytes(self.REG_MTF8x01_ENABLE, [0x01])
-    if(self._waitForCpuReady() != True):
+    if(self._wait_for_cpu_ready() != True):
       return False
-    if(self._getAppId() == 0x80):
-      self._loadApplication()
+    if(self._get_app_id() == 0x80):
+      self._load_application()
       if self._waitForApplication() == False:
         return False
     return True
 
-  def powerDown(self):
-    '''
+  def power_down(self):
+    '''!
       @brief power down sensor by EN pin.
       @return sucess return True, or return False
     '''
@@ -448,32 +428,32 @@ class DFRobot_TMF8x01:
       return False
     if (self._en < 0):
       return False
-    time.sleep(1);
+    time.sleep(1)
     GPIO.output(self._en, GPIO.LOW)
-    time.sleep(1);
+    time.sleep(1)
     self._addr = 0x41
     return True
 
-  def getI2CAddress(self):
-    '''
+  def get_i2c_address(self):
+    '''!
       @brief get I2C address.
       @return return 7 bits I2C address
     '''
     return self._addr
 
-  def _downloadRamPatch(self):
+  def _download_ram_patch(self):
     pass
 
-  def _getCalibrationMode(self):
+  def _get_calibration_mode(self):
     mode = 0
-    if(self._measureCmdSet[self.CMDSET_INDEX_CMD7] & (1<< self.CMDSET_BIT_CALIB)):
-      mode = 1;
-    if(self._measureCmdSet[self.CMDSET_INDEX_CMD7] & (1<< self.CMDSET_BIT_ALGO)):
-      mode |= (1<<self.CMDSET_BIT_ALGO);
+    if(self._measure_cmd_set[self.CMDSET_INDEX_CMD7] & (1<< self.CMDSET_BIT_CALIB)):
+      mode = 1
+    if(self._measure_cmd_set[self.CMDSET_INDEX_CMD7] & (1<< self.CMDSET_BIT_ALGO)):
+      mode |= (1<<self.CMDSET_BIT_ALGO)
     return mode
 
-  def _loadApplication(self):
-    '''
+  def _load_application(self):
+    '''!
        @brief set cpu to run APP0.
        @return if APP0 is running return True, or return False
     '''
@@ -483,96 +463,94 @@ class DFRobot_TMF8x01:
     else:
       return False
 
-  def _loadBootloader(self):
-    '''
+  def _load_bootloader(self):
+    '''!
        @brief set cpu to run Bootloader.
        @return if Bootloader is running return True, or return False
     '''
     self._write_bytes(self.REG_MTF8x01_APPREQID,[0x80])
-    if self._waitForBootloader() == True:
+    if self._wait_for_bootloader() == True:
       return True
     else:
       return False
 
   def _waitForApplication(self):
-    '''
+    '''!
        @brief Waiting for APP0 is running.
        @return APP0 is running in 100 ms return True, or return False
     '''
-    waitForTimeOutMs = 0.1;
-    waitForTimeoutIncMs = 0.005;
+    waitForTimeOutMs = 0.1
+    waitForTimeoutIncMs = 0.005
     t = 0
     #print("_waitForApplication")
     #print(t)
     while t < waitForTimeOutMs:
       time.sleep(waitForTimeoutIncMs)
-      if(self._getAppId() == 0xC0):
+      if(self._get_app_id() == 0xC0):
         return True
       t += waitForTimeoutIncMs
-    return False;
+    return False
 
-  def _waitForBootloader(self):
-    '''
+  def _wait_for_bootloader(self):
+    '''!
        @brief Waiting for Bootloader is running.
        @return Bootloader is running in 100 ms return True, or return False
     '''
-    waitForTimeOutMs = 0.1;
-    waitForTimeoutIncMs = 0.005;
+    waitForTimeOutMs = 0.1
+    waitForTimeoutIncMs = 0.005
     t = 0
     while t < waitForTimeOutMs:
       time.sleep(waitForTimeoutIncMs)
-      if(self._getAppId() == 0x80):
+      if(self._get_app_id() == 0x80):
         return True
       t += waitForTimeoutIncMs
-    return False;
+    return False
 
-  def _waitForCpuReady(self):
-    '''
+  def _wait_for_cpu_ready(self):
+    '''!
        @brief Waiting for CPU is ready.
        @return CPU is ready in 100 ms return True, or return False
     '''
-    waitForTimeOutMs = 0.1;
-    waitForTimeoutIncMs = 0.005;
+    waitForTimeOutMs = 0.1
+    waitForTimeoutIncMs = 0.005
     t = 0
     while t < waitForTimeOutMs:
       time.sleep(waitForTimeoutIncMs)
-      if(self._getCPUState() == 0x41):
+      if(self._get_cpu_state() == 0x41):
         return True
       t += waitForTimeoutIncMs
-    return False;
+    return False
 
-  def _modifyCmdSet(self, index, bit, val):
-    '''
-      @brief modify array measurement cmd, _measureCmdSet.
-      @param index The index of array _measureCmdSet,the range is 0~8
+  def _modify_cmd_set(self, index, bit, val):
+    '''!
+      @brief modify array measurement cmd, _measure_cmd_set.
+      @param index The index of array _measure_cmd_set,the range is 0~8
       @param bit The bit of one byte, the range is 0~7
       @param val True or False. The val of one byte's bit,false set bit to 0, true set bit to 1.
     '''
-    if ((index > (len(self._measureCmdSet) - 1)) or (bit > 7)):
+    if ((index > (len(self._measure_cmd_set) - 1)) or (bit > 7)):
       return
     if val == True:
-      self._measureCmdSet[index] |= (1 << bit)
+      self._measure_cmd_set[index] |= (1 << bit)
     else:
-      self._measureCmdSet[index] = ~((~self._measureCmdSet[index]) | (1 << bit))
+      self._measure_cmd_set[index] = ~((~self._measure_cmd_set[index]) | (1 << bit))
 
-  def _getCPUState(self):
+  def _get_cpu_state(self):
     rslt = self._read_bytes(self.REG_MTF8x01_ENABLE,1)
-    #print("%#x"%rslt[0])
     return rslt[0]
 
-  def _getAppId(self):
+  def _get_app_id(self):
     rslt = self._read_bytes(self.REG_MTF8x01_APPID,1)
-    #print("%#x"%rslt[0])
     return rslt[0]
 
-  def _calChecksum(self, l):
+  def _cal_check_sum(self, l):
     sum = 0
     for i in l:
       sum += i
     sum = sum ^ 0xff
     return sum
 
-  def _readStatusACK(self):
+  def _read_status_ack(self):
     rslt = self._read_bytes(0x08,3)
     s = rslt[0] | (rslt[1] << 8) | (rslt[2] << 16)
     if(s == 0xFF0000):
@@ -580,16 +558,16 @@ class DFRobot_TMF8x01:
     
     return False
 
-  def _stopCommand(self):
-    '''
+  def _stop_command(self):
+    '''!
       @brief  stop command.
     '''
     self._write_bytes(self.REG_MTF8x01_COMMAND, [0xff])
     time.sleep(0.1)#s 50ms
 
   def _checkStatusRegister(self, value):
-    waitForTimeOutMs = 1;
-    waitForTimeoutIncMs = 0.005;
+    waitForTimeOutMs = 1
+    waitForTimeoutIncMs = 0.005
     t = 0
     #print(t)
     while t < waitForTimeOutMs:
@@ -624,44 +602,44 @@ class DFRobot_TMF8x01:
 
 class DFRobot_TMF8801(DFRobot_TMF8x01):
   def __init__(self,enPin = -1, intPin = -1, bus_id = 1):
-    self._calibData = [0x41,0x57,0x01,0xFD,0x04,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x04]
-    self._algoStateData = [0xB1, 0xA9, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-    self._measureCmdSet = [0x01, 0xA3, 0x00, 0x00,0x00, 0x64, 0x03, 0x84, 0x02]
+    self._calib_data = [0x41,0x57,0x01,0xFD,0x04,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x04]
+    self._algo_state_data = [0xB1, 0xA9, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+    self._measure_cmd_set = [0x01, 0xA3, 0x00, 0x00,0x00, 0x64, 0x03, 0x84, 0x02]
     DFRobot_TMF8x01.__init__(self,enPin,intPin, bus_id)
   
-  def startMeasurement(self, calibMode):
-    '''
-    @brief Config measurement params to enable measurement. Need to call stopMeasurement to stop ranging action.
-    @param cailbMode: Is an enumerated variable of eCalibModeConfig_t, which is to config measurement cailibration mode.
-    @n     eModeNoCalib  :          Measuring without any calibration data.
-    @n     eModeCalib    :          Measuring with calibration data.
-    @n     eModeCalibAndAlgoState : Measuring with calibration and algorithm state.
+  def start_measurement(self, calib_m):
+    '''!
+    @brief Config measurement params to enable measurement. Need to call stop_measurement to stop ranging action.
+    @param calib_m: Is an enumerated variable, which is to config measurement cailibration mode.
+    @n     eMODE_NO_CALIB  :          Measuring without any calibration data.
+    @n     eMODE_CALIB    :          Measuring with calibration data.
+    @n     eMODE_CALIB_AND_ALGOSTATE : Measuring with calibration and algorithm state.
     @return status:
     @n      false:  enable measurement failed.
     @n      true:  enable measurement sucess.
     '''
-    return self._setCaibrationMode(calibMode)
+    return self._set_caibration_mode(calib_m)
   
-  def _downloadRamPatch(self):
+  def _download_ram_patch(self):
     '''
       @brief  download RAM patch.
       @return download sucess return True, or return False
     '''
-    if self._getAppId() != 0x80:
-      if(self._loadBootloader() != True):
+    if self._get_app_id() != 0x80:
+      if(self._load_bootloader() != True):
         print("load Bootloader failed")
         return False
     bufList = [0x08,0x14,0x01,0x29]
-    bufList.append(self._calChecksum(bufList[1:]))
+    bufList.append(self._cal_check_sum(bufList[1:]))
     self._write_bytes(bufList[0],bufList[1:])
-    if(self._readStatusACK() != True):
-      return False;
+    if(self._read_status_ack() != True):
+      return False
     
     bufList = [0x08,0x43,0x02,0x00,0x00]
-    bufList.append(self._calChecksum(bufList[1:]))
+    bufList.append(self._cal_check_sum(bufList[1:]))
     self._write_bytes(bufList[0],bufList[1:])
-    if(self._readStatusACK() != True):
-      return False;
+    if(self._read_status_ack() != True):
+      return False
     
     
     l = drv.DFRobot_TMF8801_initBuf
@@ -673,32 +651,32 @@ class DFRobot_TMF8801(DFRobot_TMF8x01):
       bufList.append(flag)
       i = i + 1
       bufList = bufList + l[i:i+flag]
-      i = i + flag;
-      bufList.append(self._calChecksum(bufList[1:]))
+      i = i + flag
+      bufList.append(self._cal_check_sum(bufList[1:]))
       self._write_bytes(bufList[0],bufList[1:])
-      if(self._readStatusACK() != True):
-        return False;
+      if(self._read_status_ack() != True):
+        return False
     bufList = [0x08,0x11,0x00]
-    bufList.append(self._calChecksum(bufList[1:]))
+    bufList.append(self._cal_check_sum(bufList[1:]))
     self._write_bytes(bufList[0],bufList[1:])
-    if(self._waitForCpuReady()):
-      return True;
+    if(self._wait_for_cpu_ready()):
+      return True
     return False
   
 class DFRobot_TMF8701(DFRobot_TMF8x01):
   def __init__(self,enPin = -1, intPin = -1, bus_id = 1):
-    self._calibData = [0x41,0x57,0x01,0xFD,0x04,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x04]
-    self._algoStateData = [0xB1, 0xA9, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-    self._measureCmdSet = [0x01, 0xA3, 0x00, 0x00,0x00, 0x64, 0x03, 0x84, 0x02]
+    self._calib_data = [0x41,0x57,0x01,0xFD,0x04,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x04]
+    self._algo_state_data = [0xB1, 0xA9, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+    self._measure_cmd_set = [0x01, 0xA3, 0x00, 0x00,0x00, 0x64, 0x03, 0x84, 0x02]
     DFRobot_TMF8x01.__init__(self,enPin, intPin, bus_id)
 
-  def startMeasurement(self, calibMode, mode):
+  def start_measurement(self, calib_m, mode):
     '''
-    @brief Config measurement params to enable measurement. Need to call stopMeasurement to stop ranging action.
-    @param cailbMode: Is an enumerated variable of eCalibModeConfig_t, which is to config measurement cailibration mode.
-    @n     eModeNoCalib  :          Measuring without any calibration data.
-    @n     eModeCalib    :          Measuring with calibration data.
-    @n     eModeCalibAndAlgoState : Measuring with calibration and algorithm state.
+    @brief Config measurement params to enable measurement. Need to call stop_measurement to stop ranging action.
+    @param calib_m: Is an enumerated variable , which is to config measurement cailibration mode.
+    @n     eMODE_NO_CALIB  :          Measuring without any calibration data.
+    @n     eMODE_CALIB    :          Measuring with calibration data.
+    @n     eMODE_CALIB_AND_ALGOSTATE : Measuring with calibration and algorithm state.
     @param mode : the ranging mode of TMF8701 sensor.
     @n     ePROXIMITY: Raing in PROXIMITY mode,ranging range 0~10cm
     @n     eDISTANCE: Raing in distance mode,ranging range 10~60cm
@@ -708,39 +686,39 @@ class DFRobot_TMF8701(DFRobot_TMF8x01):
     @n      true:  enable measurement sucess.
     '''
     if mode == self.ePROXIMITY:
-      self._modifyCmdSet(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_PROXIMITY,True);
-      self._modifyCmdSet(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_DISTANCE,False);
-      self._modifyCmdSet(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_COMBINE,False);
+      self._modify_cmd_set(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_PROXIMITY,True)
+      self._modify_cmd_set(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_DISTANCE,False)
+      self._modify_cmd_set(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_COMBINE,False)
     elif mode == self.eDISTANCE:
-      self._modifyCmdSet(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_PROXIMITY,False);
-      self._modifyCmdSet(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_DISTANCE,True);
-      self._modifyCmdSet(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_COMBINE,False);
+      self._modify_cmd_set(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_PROXIMITY,False)
+      self._modify_cmd_set(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_DISTANCE,True)
+      self._modify_cmd_set(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_COMBINE,False)
     elif mode == self.eCOMBINE:
-      self._modifyCmdSet(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_PROXIMITY,True);
-      self._modifyCmdSet(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_DISTANCE,True);
-      self._modifyCmdSet(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_COMBINE,True);
-    return self._setCaibrationMode(calibMode)
+      self._modify_cmd_set(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_PROXIMITY,True)
+      self._modify_cmd_set(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_DISTANCE,True)
+      self._modify_cmd_set(self.CMDSET_INDEX_CMD6,self.CMDSET_BIT_COMBINE,True)
+    return self._set_caibration_mode(calib_m)
 
-  def _downloadRamPatch(self):
-    '''
+  def _download_ram_patch(self):
+    '''!
       @brief  download RAM patch.
       @return download sucess return True, or return False
     '''
-    if self._getAppId() != 0x80:
-      if(self._loadBootloader() != True):
+    if self._get_app_id() != 0x80:
+      if(self._load_bootloader() != True):
         print("load Bootloader failed")
         return False
     bufList = [0x08,0x14,0x01,0x29]
-    bufList.append(self._calChecksum(bufList[1:]))
+    bufList.append(self._cal_check_sum(bufList[1:]))
     self._write_bytes(bufList[0],bufList[1:])
-    if(self._readStatusACK() != True):
-      return False;
+    if(self._read_status_ack() != True):
+      return False
     
     bufList = [0x08,0x43,0x02,0x00,0x00]
-    bufList.append(self._calChecksum(bufList[1:]))
+    bufList.append(self._cal_check_sum(bufList[1:]))
     self._write_bytes(bufList[0],bufList[1:])
-    if(self._readStatusACK() != True):
-      return False;
+    if(self._read_status_ack() != True):
+      return False
     
     
     l = drv.DFRobot_TMF8801_initBuf
@@ -752,14 +730,14 @@ class DFRobot_TMF8701(DFRobot_TMF8x01):
       bufList.append(flag)
       i = i + 1
       bufList = bufList + l[i:i+flag]
-      i = i + flag;
-      bufList.append(self._calChecksum(bufList[1:]))
+      i = i + flag
+      bufList.append(self._cal_check_sum(bufList[1:]))
       self._write_bytes(bufList[0],bufList[1:])
-      if(self._readStatusACK() != True):
-        return False;
+      if(self._read_status_ack() != True):
+        return False
     bufList = [0x08,0x11,0x00]
-    bufList.append(self._calChecksum(bufList[1:]))
+    bufList.append(self._cal_check_sum(bufList[1:]))
     self._write_bytes(bufList[0],bufList[1:])
-    if(self._waitForCpuReady()):
-      return True;
+    if(self._wait_for_cpu_ready()):
+      return True
     return False

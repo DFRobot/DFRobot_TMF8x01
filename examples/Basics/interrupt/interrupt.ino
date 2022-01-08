@@ -2,7 +2,7 @@
  * @file interrupt.ino
  * @brief If you enable INT pin, MCU will capture a interrupt signal when the measure is completed.
  * @n You can attach the INT pin of TMF8x01 to MCU external interrupt pin.
- * @n 当传感器有数据时，INT引脚将会产生一个低电平信号，MCU通过检测低电平可以判断是否有数据到来
+ * @n When the sensor has data, the INT pin will generate a low level signal, and the MCU can determine whether there is data coming by detecting the low level
  * *
  * Ranging mode configuration table: 
  * --------------------------------------------------------------------------------|
@@ -36,11 +36,10 @@
  * |------------------------------------------------------|
  *
  * @copyright   Copyright (c) 2010 DFRobot Co.Ltd (http://www.dfrobot.com)
- * @licence     The MIT License (MIT)
+ * @license     The MIT License (MIT)
  * @author [Arya](xue.peng@dfrobot.com)
  * @version  V1.0
  * @data  2021-03-26
- * @get from https://www.dfrobot.com
  * @url https://github.com/DFRobot/DFRobot_TMF8x01
  */
 

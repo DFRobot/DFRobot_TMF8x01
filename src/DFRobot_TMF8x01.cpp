@@ -3,14 +3,44 @@
  * @brief Define the basic structure of class DFRobot_TMF8x01
  *
  * @copyright   Copyright (c) 2010 DFRobot Co.Ltd (http://www.dfrobot.com)
- * @licence     The MIT License (MIT)
+ * @license     The MIT License (MIT)
  * @author [Arya](xue.peng@dfrobot.com)
  * @version  V1.0
  * @date  2021-03-16
- * @https://github.com/DFRobot/DFRobot_TMF8x01
+ * @url https://github.com/DFRobot/DFRobot_TMF8x01
  */
 #include <Arduino.h>
 #include "DFRobot_TMF8x01.h"
+
+
+#define REG_MTF8x01_ENABLE    0xE0
+#define REG_MTF8x01_APPID     0x00
+#define REG_MTF8x01_ID        0xE3
+#define REG_MTF8x01_APPREQID  0x02
+#define REG_MTF8x01_CMD_DATA9   0X06
+#define REG_MTF8x01_CMD_DATA8   0X07
+#define REG_MTF8x01_CMD_DATA7   0X08
+#define REG_MTF8x01_CMD_DATA6   0X09
+#define REG_MTF8x01_CMD_DATA5   0X0A
+#define REG_MTF8x01_CMD_DATA4   0X0B
+#define REG_MTF8x01_CMD_DATA3   0X0C
+#define REG_MTF8x01_CMD_DATA2   0X0D
+#define REG_MTF8x01_CMD_DATA1   0X0E
+#define REG_MTF8x01_CMD_DATA0   0X0F
+#define REG_MTF8x01_COMMAND     0X10
+#define REG_MTF8x01_FACTORYCALIB   0X20
+#define REG_MTF8x01_STATEDATAWR    0X2E
+#define REG_MTF8x01_STATUS         0x1D
+#define REG_MTF8x01_CONTENTS       0x1E
+#define REG_MTF8x01_RESULT_NUMBER  0x20
+#define REG_MTF8x01_INT_ENAB       0xE2
+#define REG_MTF8x01_INT_STATUS       0xE1
+#define REG_MTF8x01_VERSION_MAJOR   0X01  
+#define REG_MTF8x01_VERSION_MINORANDPATCH   0x12 
+#define REG_MTF8x01_VERSION_HW              0xE3
+#define REG_MTF8x01_VERSION_SERIALNUM       0x28
+
+
 
 DFRobot_TMF8x01::DFRobot_TMF8x01(int enPin, int intPin,TwoWire &pWire)
   :_en(enPin),_intPin(intPin),_initialize(false),_count(0), _config(0),_timestamp(0), _measureCmdFlag(false),_addr(0x41), _pWire(&pWire){

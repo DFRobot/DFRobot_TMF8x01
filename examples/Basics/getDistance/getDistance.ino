@@ -1,7 +1,7 @@
 /*!
  * @file getDistance.ino
  * @brief Get measurement data by PROXIMITY and DISTANCE hybrid mode.
- * @n note: TMF8801 only suport one mode, PROXIMITY and DISTANCE hybrid mode.
+ * @note: TMF8801 only suport one mode, PROXIMITY and DISTANCE hybrid mode.
  * *
  * Ranging mode configuration table: 
  * --------------------------------------------------------------------------------|
@@ -35,11 +35,10 @@
  * |-----------------------------------------|
  *
  * @copyright   Copyright (c) 2010 DFRobot Co.Ltd (http://www.dfrobot.com)
- * @licence     The MIT License (MIT)
+ * @license     The MIT License (MIT)
  * @author [Arya](xue.peng@dfrobot.com)
  * @version  V1.0
  * @data  2021-03-26
- * @get from https://www.dfrobot.com
  * @url https://github.com/DFRobot/DFRobot_TMF8x01
  */
 

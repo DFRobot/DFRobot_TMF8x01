@@ -34,11 +34,10 @@
  * |-----------------------------------------|
  *
  * @copyright   Copyright (c) 2010 DFRobot Co.Ltd (http://www.dfrobot.com)
- * @licence     The MIT License (MIT)
+ * @license     The MIT License (MIT)
  * @author [Arya](xue.peng@dfrobot.com)
  * @version  V1.0
  * @data   2021-04-02
- * @get from https://www.dfrobot.com
  * @url https://github.com/DFRobot/DFRobot_TMF8x01
  */
 

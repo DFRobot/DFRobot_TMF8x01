@@ -1,7 +1,8 @@
 /*!
  * @file sleep.ino
- * @brief 测距20次，睡眠2ms，再测距，TMF8x01传感器可以进入睡眠模式，在该模式下，传感器将停止测距.我们可以通过wakeup去唤醒该传感器，重新进入测距模式。
- * @n note: 测距模式下电流大概为37.9mA, 睡眠模式下电流为1.2mA
+ * @brief After measuring 20 times, sleeping for 2ms, and then measuring, the TMF8x01 sensor can enter sleep mode. 
+ * @n In this mode, the sensor will stop ranging. We can wake up the sensor through wakeup and re-enter the ranging mode.
+ * @note: The current in the ranging mode is approximately 37.9mA, and the current in the sleep mode is 1.2mA.
  * *
  * Ranging mode configuration table: 
  * --------------------------------------------------------------------------------|
@@ -35,11 +36,10 @@
  * |-----------------------------------------|
  *
  * @copyright   Copyright (c) 2010 DFRobot Co.Ltd (http://www.dfrobot.com)
- * @licence     The MIT License (MIT)
+ * @license     The MIT License (MIT)
  * @author [Arya](xue.peng@dfrobot.com)
  * @version  V1.0
  * @data  2021-03-26
- * @get from https://www.dfrobot.com
  * @url https://github.com/DFRobot/DFRobot_TMF8x01
  */
 
