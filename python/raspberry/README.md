@@ -197,6 +197,12 @@ python3 demo_calibration.py
   '''
   def get_i2c_address(self):
     
+  '''!
+    @brief get junction temperature of sensor.
+    @return Junction temperature of sensor, unit, Celsius.
+  '''
+  def get_junction_temperature_C(self):
+    
 ```
 
 ## Compatibility

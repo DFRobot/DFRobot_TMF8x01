@@ -196,6 +196,12 @@ python3 demo_calibration.py
     @return 返回7位I2C地址
   '''
   def get_i2c_address(self):
+
+  '''!
+    @brief 获取传感器的结温，结温即传感器的实际工作温度，在操作中，它通常较封装外壳温度高。
+    @return 结温, 单位, ℃.
+  '''
+  def get_junction_temperature_C(self):
 ```
 
 ## 兼容性

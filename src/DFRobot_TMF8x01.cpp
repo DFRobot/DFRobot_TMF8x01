@@ -32,6 +32,7 @@
 #define REG_MTF8x01_STATEDATAWR    0X2E
 #define REG_MTF8x01_STATUS         0x1D
 #define REG_MTF8x01_CONTENTS       0x1E
+#define REG_MTF8x01_TJ             0x32
 #define REG_MTF8x01_RESULT_NUMBER  0x20
 #define REG_MTF8x01_INT_ENAB       0xE2
 #define REG_MTF8x01_INT_STATUS       0xE1
@@ -527,6 +528,12 @@ uint8_t DFRobot_TMF8x01::getCPUState(){
   eEnableReg_t regValue;
   readReg(REG_MTF8x01_ENABLE, &regValue, sizeof(regValue));
   return regValue.value;
+}
+
+int8_t DFRobot_TMF8x01::getJunctionTemperature_C(){
+  int8_t temp = 0;
+  readReg(REG_MTF8x01_TJ, &temp, 1);
+  return temp;
 }
 
 

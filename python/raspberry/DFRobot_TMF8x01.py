@@ -77,6 +77,7 @@ class DFRobot_TMF8x01:
   REG_MTF8x01_VERSION_SERIALNUM = 0x28
   REG_MTF8x01_INT_ENAB = 0xE2
   REG_MTF8x01_INT_STATUS = 0xE1
+  REG_MTF8x01_TJ         = 0x32
   
   SENSOR_MTF8x01_CALIBRATION_SIZE = 14
   
@@ -440,6 +441,19 @@ class DFRobot_TMF8x01:
       @return return 7 bits I2C address
     '''
     return self._addr
+
+  def get_junction_temperature_C(self):
+    '''!
+      @brief get junction temperature of sensor.
+      @return Junction temperature of sensor, unit, Celsius.
+    '''
+    temp = self._read_bytes(self.REG_MTF8x01_TJ, 1)
+
+    if temp[0] & 0x80:
+      return -((~temp[0]) + 1)
+    else:
+      return temp[0]
+    
 
   def _download_ram_patch(self):
     pass

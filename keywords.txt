@@ -36,6 +36,7 @@ modifyI2CAddress	KEYWORD2
 setGPIOControl	KEYWORD2
 getI2CAddress	KEYWORD2
 setRangingMode	KEYWORD2
+getJunctionTemperature_C	KEYWORD2
 
 #######################################
 # Instances (KEYWORD2)

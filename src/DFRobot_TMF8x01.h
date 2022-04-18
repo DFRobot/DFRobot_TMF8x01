@@ -249,6 +249,13 @@ public:
    */
   void pinConfig(ePin_t pin, ePinControl_t config);
   
+  /**
+   * @fn getJunctionTemperature_C
+   * @brief get junction temperature of sensor.
+   * @return Junction temperature of sensor, unit, Celsius.
+   */
+  int8_t getJunctionTemperature_C();
+  
 protected:
   virtual bool downloadRamPatch() = 0;
   uint8_t  getCalibrationMode();

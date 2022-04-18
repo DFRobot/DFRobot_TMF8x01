@@ -193,6 +193,13 @@ PIN1 | 不连接，浮空或连接到主控的IO引脚上，或其他的数字�
   void pinConfig(ePin_t pin, ePinControl_t config);
 
   /**
+   * @fn getJunctionTemperature_C
+   * @brief 获取传感器的结温，结温即传感器的实际工作温度，在操作中，它通常较封装外壳温度高。
+   * @return 结温, 单位, ℃.
+   */
+  int8_t getJunctionTemperature_C();
+
+  /**
    * @fn startMeasurement
    * @brief 配置测量参数去使能测量。调用stopMeasurement函数将停止测量动作
    * @param cailbMode: eCalibModeConfig_t 的一个枚举变量，用于配置测量校准模式。
