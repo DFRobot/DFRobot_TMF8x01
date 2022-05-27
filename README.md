@@ -33,7 +33,7 @@ If the above two conditions are met, the calibration data obtained with the cali
 It supports TMF8801 and TMF8701 TOF ranging sensors. The characteristics of these two sensors are as follows:
   Type | suport ranging mode | ranging ranges | Accuracy |
 ---------------- | ---------------- | ---------------- | ---------------- |
-TMF8801     | PROXIMITY and DISTANCE hybrid mode(only one)  |   20~240cm   | 20~100mm: +/-15mm <br> 100~200mm: +/-10mm |
+TMF8801     | PROXIMITY and DISTANCE hybrid mode(only one)  |   20~240cm   | 20 ~ 100mm: +/-15mm <br> 100 ~ 200mm: +/-10mm |
 TMF8701     | PROXIMITY mode |   0~10cm   |   >=200: +/-%5   |
 TMF8701     | DISTANCE mode  |  10~60cm   |  100~200mm: +/-10mm |
 TMF8701     | PROXIMITY and DISTANCE hybrid mode  |  0~60cm  |
