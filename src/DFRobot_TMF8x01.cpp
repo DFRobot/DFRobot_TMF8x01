@@ -605,6 +605,7 @@ void DFRobot_TMF8x01::conversion(String str, uint8_t *buf, uint8_t &len, uint8_t
               if((count-1) >= checksumbit) sum += buf[count - 1];
           }
       }
+      if (str.length() <= (i + 1)) break;
       str = str.substring(i+1);
       str.trim();
   }
