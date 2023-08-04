@@ -332,10 +332,8 @@ bool DFRobot_TMF8x01::isDataReady(){
   sResult_t result;
   uint32_t t,sysT;
   double t1, t2;
-  uint8_t temp[4];
 
   memset(&result, 0, sizeof(_result));
-  memset(temp, 0, 4);
   t = millis();
   readReg(REG_MTF8x01_STATUS, &result, sizeof(result));
   //Serial.println(result.regContents,HEX);
@@ -364,13 +362,15 @@ bool DFRobot_TMF8x01::isDataReady(){
               if(_MoudleTime[4] > _MoudleTime[0] && (_hostTime[4] >= _hostTime[0])){
                   t1 = (_hostTime[4] - _hostTime[0])*10;
                   t2 = (_MoudleTime[4] - _MoudleTime[0])*0.2/100;
-                  _timestamp = t1/t2;
+                  if((double(t1/t2) >= 0.7) && (double(t1/t2) <= 1.3)){
+                      _timestamp = t1/t2;
+                  }
               }
-              DBG(_timestamp);
-              memcpy(temp, _hostTime + 1, 4);
-              memcpy(_hostTime, temp, 4);
-              memcpy(temp, _MoudleTime + 1, 4);
-              memcpy(_MoudleTime, temp, 4);
+              
+              for(int i = 0; i < 4; i++){
+                _hostTime[i] = _hostTime[i+1];
+                _MoudleTime[i] = _MoudleTime[i+1];
+              }
           }else _count = 0;
           return true;
       }
@@ -391,6 +391,10 @@ uint16_t DFRobot_TMF8x01::getDistance_mm(){
   uint16_t rslt = (_result.disH << 8) | _result.disL;
   DBG(rslt);
   DBG(_timestamp);
+  //Serial.print("rslt: ");
+  //Serial.print(rslt);
+  //Serial.print(", _timestamp: ");
+  //Serial.println(_timestamp);
   rslt *= _timestamp;
   
   if(_measureCmdSet[CMDSET_INDEX_CMD6] & (1<<CMDSET_BIT_INT)){
